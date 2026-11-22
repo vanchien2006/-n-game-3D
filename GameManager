@@ -1,0 +1,102 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
+using System.Collections;
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance;
+
+    [Header("Điều kiện qua màn")]
+    public int coinsRequired = 10;
+
+    [Header("UI (kéo thả)")]
+    public TMP_Text coinText;
+    public TMP_Text healthText;
+    public TMP_Text messageText;
+    public GameObject winPanel;
+    public GameObject gameOverPanel;
+
+    int coins;
+
+    void Awake()
+    {
+        Instance = this;
+        Time.timeScale = 1f;
+    }
+
+    void Start()
+    {
+        if (winPanel) winPanel.SetActive(false);
+        if (gameOverPanel) gameOverPanel.SetActive(false);
+        if (messageText) messageText.text = "";
+        RefreshCoinUI();
+    }
+
+    public void AddCoin(int amount)
+    {
+        coins += amount;
+        RefreshCoinUI();
+        if (coins >= coinsRequired) ShowMessage("Đủ xu rồi! Hãy đến cổng!");
+    }
+
+    public bool HasEnoughCoins() => coins >= coinsRequired;
+
+    void RefreshCoinUI()
+    {
+        if (coinText) coinText.text = $"Xu: {coins}/{coinsRequired}";
+    }
+
+    public void UpdateHealth(int current, int max)
+    {
+        if (healthText) healthText.text = $"Máu: {current}/{max}";
+    }
+
+    public void ShowMessage(string msg)
+    {
+        if (!messageText) return;
+        StopAllCoroutines();
+        StartCoroutine(MessageRoutine(msg));
+    }
+
+    IEnumerator MessageRoutine(string msg)
+    {
+        messageText.text = msg;
+        yield return new WaitForSeconds(2f);
+        messageText.text = "";
+    }
+
+    public void LevelComplete(string sceneName)
+    {
+        if (winPanel) winPanel.SetActive(true);
+        Time.timeScale = 0f;
+        StartCoroutine(LoadNext(sceneName));
+    }
+
+    IEnumerator LoadNext(string sceneName)
+    {
+        yield return new WaitForSecondsRealtime(2f);
+        Time.timeScale = 1f;
+        if (!string.IsNullOrEmpty(sceneName))
+            SceneManager.LoadScene(sceneName);
+        else
+        {
+            int next = SceneManager.GetActiveScene().buildIndex + 1;
+            if (next < SceneManager.sceneCountInBuildSettings) SceneManager.LoadScene(next);
+            else SceneManager.LoadScene(0); // hết màn thì quay lại màn đầu
+        }
+    }
+
+    public void GameOver()
+    {
+        if (gameOverPanel) gameOverPanel.SetActive(true);
+        Time.timeScale = 0f;
+    }
+
+    // Gắn vào nút "Chơi lại"
+    public void Restart()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+}
