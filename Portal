@@ -1,0 +1,20 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+[RequireComponent(typeof(Collider))]
+public class Portal : MonoBehaviour
+{
+    public string nextSceneName = "";   // để trống = tự chuyển sang scene kế tiếp trong Build Settings
+
+    void Reset() { GetComponent<Collider>().isTrigger = true; }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("Player")) return;
+
+        if (GameManager.Instance.HasEnoughCoins())
+            GameManager.Instance.LevelComplete(nextSceneName);
+        else
+            GameManager.Instance.ShowMessage("Chưa đủ xu để qua màn!");
+    }
+}
